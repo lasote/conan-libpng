@@ -13,7 +13,6 @@ class LibpngConan(ConanFile):
     settings = "os", "arch", "compiler", "build_type"
     options = {"shared": [True, False]}
     default_options = "shared=False"
-    exports = "CMakeLists.txt"
     url="http://github.com/lasote/conan-libpng"
     requires = "zlib/1.2.8@lasote/stable"
     license="Open source: http://www.libpng.org/pub/png/src/libpng-LICENSE.txt"
@@ -45,9 +44,11 @@ class LibpngConan(ConanFile):
             replace_in_file("%s/CMakeLists.txt" % self.ZIP_FOLDER_NAME, "project(libpng C)", "")
             
             cmake = CMake(self.settings)
+            shared_options = "-DPNG_SHARED=ON -DPNG_STATIC=OFF" if self.options.shared else "-DPNG_SHARED=OFF -DPNG_STATIC=ON"
+            
             self.run("cd %s && mkdir _build" % self.ZIP_FOLDER_NAME)
             cd_build = "cd %s/_build" % self.ZIP_FOLDER_NAME
-            self.run('%s && cmake .. %s' % (cd_build, cmake.command_line))
+            self.run('%s && cmake .. %s %s' % (cd_build, cmake.command_line, shared_options))
             self.run("%s && cmake --build . %s" % (cd_build, cmake.build_config))
                 
     def package(self):
@@ -73,6 +74,9 @@ class LibpngConan(ConanFile):
 
     def package_info(self):
         if self.settings.os == "Windows":
-            self.cpp_info.libs = ['libpng16']
+            if self.options.shared:
+                self.cpp_info.libs = ['libpng16']
+            else:
+                self.cpp_info.libs = ['libpng16_static']
         else:
             self.cpp_info.libs = ["png16"]
