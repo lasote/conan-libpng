@@ -1,6 +1,6 @@
 env:
  global:
-   #- CONAN_UPLOAD: 1
+   - CONAN_UPLOAD: 1
    - CONAN_REFERENCE: "libpng/1.16.21"
    - CONAN_USERNAME: "lasote"
    - CONAN_CHANNEL: "ci"
