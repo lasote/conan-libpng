@@ -17,7 +17,12 @@ class LibpngConan(ConanFile):
     requires = "zlib/1.2.8@lasote/stable"
     license="Open source: http://www.libpng.org/pub/png/src/libpng-LICENSE.txt"
     
-       
+    def config(self):
+        try: # Try catch can be removed when conan 0.8 is released
+            del self.settings.compiler.libcxx 
+        except: 
+            pass
+        
     def source(self):
         zip_name = "%s.tar.gz" % self.ZIP_FOLDER_NAME
         download("http://downloads.sourceforge.net/project/libpng/libpng16/%s/%s" % (self.version, zip_name), zip_name)
