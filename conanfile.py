@@ -35,7 +35,12 @@ class LibpngConan(ConanFile):
         """
         env = ConfigureEnvironment(self.deps_cpp_info, self.settings)
 
-        if self.settings.os == "Linux" or self.settings.os == "Macos":            
+        if self.settings.os == "Linux" or self.settings.os == "Macos":       
+            if self.settings.os == "Macos":
+                old_str = '-install_name \$rpath/\$soname'
+                new_str = '-install_name \$soname'
+                replace_in_file("./%s/configure" % self.ZIP_FOLDER_NAME, old_str, new_str)
+                     
             self.run("cd %s && %s ./configure" % (self.ZIP_FOLDER_NAME, env.command_line))
             #self.run("cd %s && %s make check" % (self.ZIP_FOLDER_NAME, env.command_line))
             self.run("cd %s && %s make" % (self.ZIP_FOLDER_NAME, env.command_line))
