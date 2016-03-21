@@ -36,13 +36,12 @@ class LibpngConan(ConanFile):
         """ Define your project building. You decide the way of building it
             to reuse it later in any other project.
         """
-        env = ConfigureEnvironment(self.deps_cpp_info, self.settings)
-        if self.options.fPIC:
-            env_line = env.command_line.replace('CFLAGS=" "', 'CFLAGS="-fPIC"')
-        else:
-            env_line = env.command_line
-            
-        if self.settings.os == "Linux" or self.settings.os == "Macos":       
+        env = ConfigureEnvironment(self.deps_cpp_info, self.settings)     
+        if self.settings.os == "Linux" or self.settings.os == "Macos":
+            if self.options.fPIC:
+                 env_line = env.command_line.replace('CFLAGS=" "', 'CFLAGS="-fPIC"')
+            else:
+                 env_line = env.command_line     
             if self.settings.os == "Macos":
                 old_str = '-install_name \$rpath/\$soname'
                 new_str = '-install_name \$soname'
