@@ -11,8 +11,8 @@ class LibpngConan(ConanFile):
     ZIP_FOLDER_NAME = "%s-%s" % (name, version)
     generators = "cmake", "txt"
     settings = "os", "arch", "compiler", "build_type"
-    options = {"shared": [True, False]}
-    default_options = "shared=False"
+    options = {"shared": [True, False], "fPIC": [True, False]}
+    default_options = "shared=False", "fPIC=True"
     url="http://github.com/lasote/conan-libpng"
     requires = "zlib/1.2.8@lasote/stable"
     license="Open source: http://www.libpng.org/pub/png/src/libpng-LICENSE.txt"
@@ -22,6 +22,9 @@ class LibpngConan(ConanFile):
             del self.settings.compiler.libcxx 
         except: 
             pass
+        
+        if self.settings.os == "Windows":
+            self.options.remove("fPIC")
         
     def source(self):
         zip_name = "%s.tar.gz" % self.ZIP_FOLDER_NAME
@@ -34,16 +37,19 @@ class LibpngConan(ConanFile):
             to reuse it later in any other project.
         """
         env = ConfigureEnvironment(self.deps_cpp_info, self.settings)
-
+        if self.options.fPIC:
+            env_line = env.command_line.replace('CFLAGS=" "', 'CFLAGS="-fPIC"')
+        else:
+            env_line = env.command_line
+            
         if self.settings.os == "Linux" or self.settings.os == "Macos":       
             if self.settings.os == "Macos":
                 old_str = '-install_name \$rpath/\$soname'
                 new_str = '-install_name \$soname'
                 replace_in_file("./%s/configure" % self.ZIP_FOLDER_NAME, old_str, new_str)
                      
-            self.run("cd %s && %s ./configure" % (self.ZIP_FOLDER_NAME, env.command_line))
-            #self.run("cd %s && %s make check" % (self.ZIP_FOLDER_NAME, env.command_line))
-            self.run("cd %s && %s make" % (self.ZIP_FOLDER_NAME, env.command_line))
+            self.run("cd %s && %s ./configure" % (self.ZIP_FOLDER_NAME, env_line))
+            self.run("cd %s && %s make" % (self.ZIP_FOLDER_NAME, env_line))
         else:
             conan_magic_lines = '''project(libpng)
     cmake_minimum_required(VERSION 3.0)
