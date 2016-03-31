@@ -39,7 +39,7 @@ class LibpngConan(ConanFile):
         env = ConfigureEnvironment(self.deps_cpp_info, self.settings)     
         if self.settings.os == "Linux" or self.settings.os == "Macos":
             if self.options.fPIC:
-                 env_line = env.command_line.replace('CFLAGS=" "', 'CFLAGS="-fPIC"')
+                 env_line = env.command_line.replace('CFLAGS="', 'CFLAGS="-fPIC ')
             else:
                  env_line = env.command_line     
             if self.settings.os == "Macos":
@@ -47,7 +47,9 @@ class LibpngConan(ConanFile):
                 new_str = '-install_name \$soname'
                 replace_in_file("./%s/configure" % self.ZIP_FOLDER_NAME, old_str, new_str)
                      
-            self.run("cd %s && %s ./configure" % (self.ZIP_FOLDER_NAME, env_line))
+            configure = "cd %s && %s ./configure" % (self.ZIP_FOLDER_NAME, env_line)
+            self.output.warn(configure)
+	    self.run(configure)
             self.run("cd %s && %s make" % (self.ZIP_FOLDER_NAME, env_line))
         else:
             conan_magic_lines = '''project(libpng)
