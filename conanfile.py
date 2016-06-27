@@ -7,7 +7,7 @@ from conans import CMake
 
 class LibpngConan(ConanFile):
     name = "libpng"
-    version = "1.6.21"
+    version = "1.6.23"
     ZIP_FOLDER_NAME = "%s-%s" % (name, version)
     generators = "cmake", "txt"
     settings = "os", "arch", "compiler", "build_type"
