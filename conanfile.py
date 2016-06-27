@@ -60,7 +60,7 @@ class LibpngConan(ConanFile):
     include(../conanbuildinfo.cmake)
     CONAN_BASIC_SETUP()
     '''
-            replace_in_file("%s/CMakeLists.txt" % self.ZIP_FOLDER_NAME, "cmake_minimum_required(VERSION 2.4.4)", conan_magic_lines)
+            replace_in_file("%s/CMakeLists.txt" % self.ZIP_FOLDER_NAME, "cmake_minimum_required(VERSION 2.8.3)", conan_magic_lines)
             replace_in_file("%s/CMakeLists.txt" % self.ZIP_FOLDER_NAME, "project(libpng C)", "")
             
             cmake = CMake(self.settings)
