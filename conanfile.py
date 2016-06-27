@@ -28,7 +28,10 @@ class LibpngConan(ConanFile):
         
     def source(self):
         zip_name = "%s.tar.gz" % self.ZIP_FOLDER_NAME
-        download("https://sourceforge.net/projects/libpng/files/libpng16/older-releases/%s/%s" % (self.version, zip_name), zip_name)
+        try:
+            download("https://sourceforge.net/projects/libpng/files/libpng16/%s/%s" % (self.version, zip_name), zip_name)
+        except Exception:
+            download("https://sourceforge.net/projects/libpng/files/libpng16/older-releases/%s/%s" % (self.version, zip_name), zip_name)
         unzip(zip_name)
         os.unlink(zip_name)
 
