@@ -28,7 +28,7 @@ class LibpngConan(ConanFile):
         
     def source(self):
         zip_name = "%s.tar.gz" % self.ZIP_FOLDER_NAME
-        download("http://downloads.sourceforge.net/project/libpng/libpng16/%s/%s" % (self.version, zip_name), zip_name)
+        download("https://sourceforge.net/projects/libpng/files/libpng16/older-releases/%s/%s" % (self.version, zip_name), zip_name)
         unzip(zip_name)
         os.unlink(zip_name)
 
@@ -49,7 +49,7 @@ class LibpngConan(ConanFile):
                      
             configure = "cd %s && %s ./configure" % (self.ZIP_FOLDER_NAME, env_line)
             self.output.warn(configure)
-	    self.run(configure)
+            self.run(configure)
             self.run("cd %s && %s make" % (self.ZIP_FOLDER_NAME, env_line))
         else:
             conan_magic_lines = '''project(libpng)
