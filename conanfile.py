@@ -16,6 +16,7 @@ class LibpngConan(ConanFile):
     url="http://github.com/lasote/conan-libpng"
     requires = "zlib/1.2.8@lasote/stable"
     license="Open source: http://www.libpng.org/pub/png/src/libpng-LICENSE.txt"
+    exports="FindPNG.cmake"
     
     def config(self):
         try: # Try catch can be removed when conan 0.8 is released
@@ -75,6 +76,9 @@ class LibpngConan(ConanFile):
         """ Define your conan structure: headers, libs, bins and data. After building your
             project, this method is called to create a defined structure:
         """
+         # Copy findPNG.cmake to package
+        self.copy("FindPNG.cmake", ".", ".")
+        
         # Copying headers
         self.copy("*.h", "include", "%s" % (self.ZIP_FOLDER_NAME), keep_path=False)
 
