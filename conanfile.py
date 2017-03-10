@@ -54,6 +54,8 @@ class LibpngConan(ConanFile):
                         replace_in_file("./configure", '-install_name \$rpath/\$soname', '-install_name \$soname')
                     self.run("./configure")
                     self.run("make")
+                    replace_in_file("libpng16.pc", "${prefix}/include/libpng16", "${prefix}/include")
+                    replace_in_file("libpng.pc", "${prefix}/include/libpng16", "${prefix}/include")
         else:
             conan_magic_lines = '''project(libpng)
 cmake_minimum_required(VERSION 3.0)
