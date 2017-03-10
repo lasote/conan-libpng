@@ -111,4 +111,3 @@ CONAN_BASIC_SETUP()
             self.cpp_info.libs = ["png16"]
             if self.settings.os == "Linux":
                 self.cpp_info.libs.append("m")
-            self.env_info.PKG_CONFIG_PATH.append(self.package_folder)
