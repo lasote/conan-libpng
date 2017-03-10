@@ -1,6 +1,5 @@
 [![Build Status](https://travis-ci.org/lasote/conan-libpng.svg)](https://travis-ci.org/lasote/conan-libpng)
 
-
 # conan-libpng
 
 [Conan.io](https://conan.io) package for lib libpng library: http://www.libpng.org/pub/png/libpng.html
