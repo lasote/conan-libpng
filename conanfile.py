@@ -15,8 +15,10 @@ class LibpngConan(ConanFile):
     default_options = "shared=False", "fPIC=True"
     url="http://github.com/lasote/conan-libpng"
     requires = "zlib/1.2.11@lasote/stable"
-    license="Open source: http://www.libpng.org/pub/png/src/libpng-LICENSE.txt"
-    exports="FindPNG.cmake"
+    license = "Open source: http://www.libpng.org/pub/png/src/libpng-LICENSE.txt"
+    exports = "FindPNG.cmake"
+    description = "libpng is the official PNG reference library. It supports almost all PNG features, is extensible,"" \
+    "" and has been extensively tested for over 20 years."
     
     def config(self):
         try: # Try catch can be removed when conan 0.8 is released
@@ -109,3 +111,4 @@ CONAN_BASIC_SETUP()
             self.cpp_info.libs = ["png16"]
             if self.settings.os == "Linux":
                 self.cpp_info.libs.append("m")
+            self.env_info.PKG_CONFIG_PATH.append(self.package_folder)
