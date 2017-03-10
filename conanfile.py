@@ -1,8 +1,8 @@
-from conans import ConanFile, ConfigureEnvironment
+from conans import ConanFile, tools
 import os
 from conans.tools import download
 from conans.tools import unzip, replace_in_file
-from conans import CMake
+from conans import CMake, AutoToolsBuildEnvironment
 
 
 class LibpngConan(ConanFile):
@@ -14,7 +14,7 @@ class LibpngConan(ConanFile):
     options = {"shared": [True, False], "fPIC": [True, False]}
     default_options = "shared=False", "fPIC=True"
     url="http://github.com/lasote/conan-libpng"
-    requires = "zlib/1.2.8@lasote/stable"
+    requires = "zlib/1.2.11@lasote/stable"
     license="Open source: http://www.libpng.org/pub/png/src/libpng-LICENSE.txt"
     exports="FindPNG.cmake"
     
@@ -40,45 +40,46 @@ class LibpngConan(ConanFile):
         """ Define your project building. You decide the way of building it
             to reuse it later in any other project.
         """
-        env = ConfigureEnvironment(self.deps_cpp_info, self.settings)     
+
         if self.settings.os == "Linux" or self.settings.os == "Macos":
-            if self.options.fPIC:
-                 env_line = env.command_line.replace('CFLAGS="', 'CFLAGS="-fPIC ')
-            else:
-                 env_line = env.command_line     
-            if self.settings.os == "Macos":
-                old_str = '-install_name \$rpath/\$soname'
-                new_str = '-install_name \$soname'
-                replace_in_file("./%s/configure" % self.ZIP_FOLDER_NAME, old_str, new_str)
-                     
-            configure = "cd %s && %s ./configure" % (self.ZIP_FOLDER_NAME, env_line)
-            self.output.warn(configure)
-            self.run(configure)
-            self.run("cd %s && %s make" % (self.ZIP_FOLDER_NAME, env_line))
+
+            env_build = AutoToolsBuildEnvironment(self)
+            env_build.fpic = self.options.fPIC
+
+            with tools.environment_append(env_build.vars):
+                with tools.chdir(self.ZIP_FOLDER_NAME):
+                    if self.settings.os == "Macos":
+                        replace_in_file("./configure", '-install_name \$rpath/\$soname', '-install_name \$soname')
+                    self.run("./configure")
+                    self.run("make")
         else:
             conan_magic_lines = '''project(libpng)
-    cmake_minimum_required(VERSION 3.0)
-    include(../conanbuildinfo.cmake)
-    CONAN_BASIC_SETUP()
+cmake_minimum_required(VERSION 3.0)
+include(../conanbuildinfo.cmake)
+CONAN_BASIC_SETUP()
     '''
-            replace_in_file("%s/CMakeLists.txt" % self.ZIP_FOLDER_NAME, "cmake_minimum_required(VERSION 2.8.3)", conan_magic_lines)
-            replace_in_file("%s/CMakeLists.txt" % self.ZIP_FOLDER_NAME, "project(libpng C)", "")
-            
-            cmake = CMake(self.settings)
-            shared_options = "-DPNG_SHARED=ON -DPNG_STATIC=OFF" if self.options.shared else "-DPNG_SHARED=OFF -DPNG_STATIC=ON"
-            
-            self.run("cd %s && mkdir _build" % self.ZIP_FOLDER_NAME)
-            cd_build = "cd %s/_build" % self.ZIP_FOLDER_NAME
-            self.run('%s && cmake .. %s %s' % (cd_build, cmake.command_line, shared_options))
-            self.run("%s && cmake --build . %s" % (cd_build, cmake.build_config))
+            with tools.chdir(self.ZIP_FOLDER_NAME):
+                replace_in_file("CMakeLists.txt", "cmake_minimum_required(VERSION 2.8.3)", conan_magic_lines)
+                replace_in_file("CMakeLists.txt", "project(libpng C)", "")
+
+                cmake = CMake(self.settings)
+                shared_options = "-DPNG_SHARED=ON -DPNG_STATIC=OFF" if self.options.shared else "-DPNG_SHARED=OFF -DPNG_STATIC=ON"
+
+                self.run("mkdir _build")
+                with tools.chdir("./_build"):
+                    self.run('cmake .. %s %s' % (cmake.command_line, shared_options))
+                    self.run("cmake --build . %s" % cmake.build_config)
                 
     def package(self):
         """ Define your conan structure: headers, libs, bins and data. After building your
             project, this method is called to create a defined structure:
         """
-         # Copy findPNG.cmake to package
+        # Copy findPNG.cmake to package
         self.copy("FindPNG.cmake", ".", ".")
-        
+
+        # Copy pc file
+        self.copy("*.pc", dst="", keep_path=False)
+
         # Copying headers
         self.copy("*.h", "include", "%s" % (self.ZIP_FOLDER_NAME), keep_path=False)
 
