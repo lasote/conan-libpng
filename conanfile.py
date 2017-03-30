@@ -1,5 +1,6 @@
 from conans import ConanFile, tools
 import os
+import platform
 from conans.tools import download
 from conans.tools import unzip, replace_in_file
 from conans import CMake, AutoToolsBuildEnvironment
@@ -21,7 +22,7 @@ class LibpngConan(ConanFile):
     "" and has been extensively tested for over 20 years."
     
     def config(self):
-        try: # Try catch can be removed when conan 0.8 is released
+        try:  # Try catch can be removed when conan 0.8 is released
             del self.settings.compiler.libcxx 
         except: 
             pass
@@ -43,22 +44,21 @@ class LibpngConan(ConanFile):
             to reuse it later in any other project.
         """
 
-        if self.settings.os == "Linux" or self.settings.os == "Macos":
+        if platform.system() == "Linux" or platform.system() == "Darwin":
 
             env_build = AutoToolsBuildEnvironment(self)
             env_build.fpic = self.options.fPIC
 
-            with tools.environment_append(env_build.vars):
-                with tools.chdir(self.ZIP_FOLDER_NAME):
-                    if self.settings.os == "Macos":
-                        replace_in_file("./configure", '-install_name \$rpath/\$soname', '-install_name \$soname')
-                    self.run("./configure")
-                    self.run("make")
-                    replace_in_file("libpng16.pc", "${prefix}/include/libpng16", "${prefix}/include")
-                    replace_in_file("libpng.pc", "${prefix}/include/libpng16", "${prefix}/include")
-                    if not self.options.shared:
-                        replace_in_file("libpng16.pc", "-lpng16", "-lpng16 -lm -lz")
-                        replace_in_file("libpng.pc", "-lpng16", "-lpng16 -lm -lz")
+            with tools.chdir(self.ZIP_FOLDER_NAME):
+                if self.settings.os == "Macos":
+                    replace_in_file("./configure", '-install_name \$rpath/\$soname', '-install_name \$soname')
+                env_build.configure()
+                env_build.make()
+                replace_in_file("libpng16.pc", "${prefix}/include/libpng16", "${prefix}/include")
+                replace_in_file("libpng.pc", "${prefix}/include/libpng16", "${prefix}/include")
+                if not self.options.shared:
+                    replace_in_file("libpng16.pc", "-lpng16", "-lpng16 -lm -lz")
+                    replace_in_file("libpng.pc", "-lpng16", "-lpng16 -lm -lz")
         else:
             conan_magic_lines = '''project(libpng)
 cmake_minimum_required(VERSION 3.0)
@@ -85,10 +85,11 @@ CONAN_BASIC_SETUP()
         self.copy("FindPNG.cmake", ".", ".")
 
         # Copy pc file
-        self.copy("*.pc", dst="", keep_path=False)
+        if self.settings.os != "Android": # Broken symlink
+            self.copy("*.pc", dst="", keep_path=False)
 
         # Copying headers
-        self.copy("*.h", "include", "%s" % (self.ZIP_FOLDER_NAME), keep_path=False)
+        self.copy("*.h", "include", "%s" % self.ZIP_FOLDER_NAME, keep_path=False)
 
         # Copying static and dynamic libs
         if self.settings.os == "Windows":
@@ -102,7 +103,10 @@ CONAN_BASIC_SETUP()
                 else:
                     self.copy(pattern="*.so*", dst="lib", src=self.ZIP_FOLDER_NAME, keep_path=False)
             else:
-                self.copy(pattern="*.a", dst="lib", src=self.ZIP_FOLDER_NAME, keep_path=False)
+                if self.settings.os == "Android":
+                    self.copy(pattern="*.a", dst="lib", src=os.path.join(self.ZIP_FOLDER_NAME), keep_path=False)
+                else:
+                    self.copy(pattern="*.a", dst="lib", src=self.ZIP_FOLDER_NAME, keep_path=False)
 
     def package_info(self):
         if self.settings.os == "Windows":
