@@ -22,11 +22,7 @@ class LibpngConan(ConanFile):
     "" and has been extensively tested for over 20 years."
     
     def config(self):
-        try:  # Try catch can be removed when conan 0.8 is released
-            del self.settings.compiler.libcxx 
-        except: 
-            pass
-        
+        del self.settings.compiler.libcxx
         if self.settings.os == "Windows":
             self.options.remove("fPIC")
         
@@ -44,7 +40,7 @@ class LibpngConan(ConanFile):
             to reuse it later in any other project.
         """
 
-        if platform.system() == "Linux" or platform.system() == "Darwin":
+        if platform.system() != "Windows":
 
             env_build = AutoToolsBuildEnvironment(self)
             env_build.fpic = self.options.fPIC
@@ -52,8 +48,15 @@ class LibpngConan(ConanFile):
             with tools.chdir(self.ZIP_FOLDER_NAME):
                 if self.settings.os == "Macos":
                     replace_in_file("./configure", '-install_name \$rpath/\$soname', '-install_name \$soname')
-                env_build.configure()
-                env_build.make()
+
+                if hasattr(env_build, "configure"):  # New conan 0.21
+                    env_build.configure()
+                    env_build.make()
+                else:
+                    with tools.environment_append(env_build.vars):
+                        self.run("./configure")
+                        self.run("make")
+
                 replace_in_file("libpng16.pc", "${prefix}/include/libpng16", "${prefix}/include")
                 replace_in_file("libpng.pc", "${prefix}/include/libpng16", "${prefix}/include")
                 if not self.options.shared:
