@@ -15,7 +15,7 @@ class LibpngConan(ConanFile):
     options = {"shared": [True, False], "fPIC": [True, False]}
     default_options = "shared=False", "fPIC=True"
     url="http://github.com/lasote/conan-libpng"
-    requires = "zlib/1.2.11@lasote/stable"
+    requires = "zlib/1.2.11@lasote/testing"
     license = "Open source: http://www.libpng.org/pub/png/src/libpng-LICENSE.txt"
     exports = "FindPNG.cmake"
     description = "libpng is the official PNG reference library. It supports almost all PNG features, is extensible,"" \
@@ -46,7 +46,7 @@ class LibpngConan(ConanFile):
             env_build.fpic = self.options.fPIC
 
             with tools.chdir(self.ZIP_FOLDER_NAME):
-                if self.settings.os == "Macos":
+                if platform.system() == "Darwin":
                     replace_in_file("./configure", '-install_name \$rpath/\$soname', '-install_name \$soname')
 
                 if hasattr(env_build, "configure"):  # New conan 0.21
@@ -71,14 +71,20 @@ CONAN_BASIC_SETUP()
             with tools.chdir(self.ZIP_FOLDER_NAME):
                 replace_in_file("CMakeLists.txt", "cmake_minimum_required(VERSION 2.8.3)", conan_magic_lines)
                 replace_in_file("CMakeLists.txt", "project(libpng C)", "")
+                if self.settings.os == "Android" and platform.system() == "Windows":
+                    replace_in_file("CMakeLists.txt", "find_program(AWK NAMES gawk awk)", "")
 
                 cmake = CMake(self.settings)
                 shared_options = "-DPNG_SHARED=ON -DPNG_STATIC=OFF" if self.options.shared else "-DPNG_SHARED=OFF -DPNG_STATIC=ON"
 
                 self.run("mkdir _build")
                 with tools.chdir("./_build"):
-                    self.run('cmake .. %s %s' % (cmake.command_line, shared_options))
-                    self.run("cmake --build . %s" % cmake.build_config)
+                    if hasattr(cmake, "configure"):  # New conan 0.21
+                        cmake.configure(self, source_dir=self.ZIP_FOLDER_NAME)
+                        cmake.build(self)
+                    else:
+                        self.run('cmake .. %s %s' % (cmake.command_line, shared_options))
+                        self.run("cmake --build . %s" % cmake.build_config)
                 
     def package(self):
         """ Define your conan structure: headers, libs, bins and data. After building your
