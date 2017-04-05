@@ -32,5 +32,6 @@ class DefaultNameConan(ConanFile):
         self.copy(pattern="*.dylib", dst="bin", src="lib")
         
     def test(self):
-        if not tools.cross_building(self.settings):
+        # if not tools.cross_building(self.settings):
+        if not self.settings.os == "Android":
             self.run("cd bin && .%smain" % os.sep)
