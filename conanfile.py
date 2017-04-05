@@ -80,7 +80,7 @@ CONAN_BASIC_SETUP()
                 self.run("mkdir _build")
                 with tools.chdir("./_build"):
                     if hasattr(cmake, "configure"):  # New conan 0.21
-                        cmake.configure(self, source_dir=self.ZIP_FOLDER_NAME)
+                        cmake.configure(self, source_dir="../", build_dir="./")
                         cmake.build(self)
                     else:
                         self.run('cmake .. %s %s' % (cmake.command_line, shared_options))
