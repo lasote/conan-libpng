@@ -15,7 +15,7 @@ class LibpngConan(ConanFile):
     options = {"shared": [True, False], "fPIC": [True, False]}
     default_options = "shared=False", "fPIC=True"
     url="http://github.com/lasote/conan-libpng"
-    requires = "zlib/1.2.11@lasote/testing"
+    requires = "zlib/1.2.11@lasote/stable"
     license = "Open source: http://www.libpng.org/pub/png/src/libpng-LICENSE.txt"
     exports = "FindPNG.cmake"
     description = "libpng is the official PNG reference library. It supports almost all PNG features, is extensible,"" \
