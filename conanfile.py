@@ -74,15 +74,17 @@ CONAN_BASIC_SETUP()
                 if self.settings.os == "Android" and platform.system() == "Windows":
                     replace_in_file("CMakeLists.txt", "find_program(AWK NAMES gawk awk)", "")
 
-                cmake = CMake(self.settings)
+
                 shared_options = "-DPNG_SHARED=ON -DPNG_STATIC=OFF" if self.options.shared else "-DPNG_SHARED=OFF -DPNG_STATIC=ON"
 
                 self.run("mkdir _build")
                 with tools.chdir("./_build"):
+                    cmake = CMake(self)
                     if hasattr(cmake, "configure"):  # New conan 0.21
-                        cmake.configure(self, source_dir="../", build_dir="./")
-                        cmake.build(self)
+                        cmake.configure(source_dir="../", build_dir="./")
+                        cmake.build()
                     else:
+                        cmake = CMake(self.settings)
                         self.run('cmake .. %s %s' % (cmake.command_line, shared_options))
                         self.run("cmake --build . %s" % cmake.build_config)
                 
