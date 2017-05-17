@@ -47,7 +47,7 @@ class LibpngConan(ConanFile):
 
             with tools.chdir(self.ZIP_FOLDER_NAME):
                 if platform.system() == "Darwin":
-                    replace_in_file("./configure", '-install_name \$rpath/\$soname', '-install_name \$soname')
+                    replace_in_file("./configure", r'-install_name \$rpath/\$soname', '-install_name \$soname')
 
                 if hasattr(env_build, "configure"):  # New conan 0.21
                     env_build.configure()
@@ -102,10 +102,19 @@ CONAN_BASIC_SETUP()
 
         # Copying static and dynamic libs
         if self.settings.os == "Windows":
-            if self.options.shared:
-                self.copy(pattern="*.dll", dst="bin", src=self.ZIP_FOLDER_NAME, keep_path=False)
-            self.copy(pattern="*.lib", dst="lib", src=self.ZIP_FOLDER_NAME, keep_path=False)
-            self.copy(pattern="*.a", dst="lib", src=self.ZIP_FOLDER_NAME, keep_path=False)
+            if self.settings.compiler == "gcc":
+                if self.options.shared:
+                    self.copy(pattern="*.dll", dst="bin", src=self.ZIP_FOLDER_NAME, keep_path=False)
+                    self.copy(pattern="*libpng.dll.a", dst="bin", src=self.ZIP_FOLDER_NAME, keep_path=False)
+                    self.copy(pattern="*libpng16.dll.a", dst="bin", src=self.ZIP_FOLDER_NAME, keep_path=False)
+                else:
+                    self.copy(pattern="*libpng.a", dst="lib", src=self.ZIP_FOLDER_NAME, keep_path=False)
+                    self.copy(pattern="*libpng16.a", dst="lib", src=self.ZIP_FOLDER_NAME, keep_path=False)
+            else:
+                if self.options.shared:
+                    self.copy(pattern="*.dll", dst="bin", src=self.ZIP_FOLDER_NAME, keep_path=False)
+                self.copy(pattern="*.lib", dst="lib", src=self.ZIP_FOLDER_NAME, keep_path=False)
+                self.copy(pattern="*.a", dst="lib", src=self.ZIP_FOLDER_NAME, keep_path=False)
         else:
             if self.options.shared:
                 if self.settings.os == "Macos":
