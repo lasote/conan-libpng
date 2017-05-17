@@ -1,5 +1,6 @@
 from conans import ConanFile, tools
 import os
+import platform
 from conans.tools import download
 from conans.tools import unzip, replace_in_file
 from conans import CMake, AutoToolsBuildEnvironment
@@ -21,11 +22,7 @@ class LibpngConan(ConanFile):
     "" and has been extensively tested for over 20 years."
     
     def config(self):
-        try: # Try catch can be removed when conan 0.8 is released
-            del self.settings.compiler.libcxx 
-        except: 
-            pass
-        
+        del self.settings.compiler.libcxx
         if self.settings.os == "Windows":
             self.options.remove("fPIC")
         
@@ -43,22 +40,28 @@ class LibpngConan(ConanFile):
             to reuse it later in any other project.
         """
 
-        if self.settings.os == "Linux" or self.settings.os == "Macos":
+        if platform.system() != "Windows":
 
             env_build = AutoToolsBuildEnvironment(self)
             env_build.fpic = self.options.fPIC
 
-            with tools.environment_append(env_build.vars):
-                with tools.chdir(self.ZIP_FOLDER_NAME):
-                    if self.settings.os == "Macos":
-                        replace_in_file("./configure", '-install_name \$rpath/\$soname', '-install_name \$soname')
-                    self.run("./configure")
-                    self.run("make")
-                    replace_in_file("libpng16.pc", "${prefix}/include/libpng16", "${prefix}/include")
-                    replace_in_file("libpng.pc", "${prefix}/include/libpng16", "${prefix}/include")
-                    if not self.options.shared:
-                        replace_in_file("libpng16.pc", "-lpng16", "-lpng16 -lm -lz")
-                        replace_in_file("libpng.pc", "-lpng16", "-lpng16 -lm -lz")
+            with tools.chdir(self.ZIP_FOLDER_NAME):
+                if platform.system() == "Darwin":
+                    replace_in_file("./configure", r'-install_name \$rpath/\$soname', '-install_name \$soname')
+
+                if hasattr(env_build, "configure"):  # New conan 0.21
+                    env_build.configure()
+                    env_build.make()
+                else:
+                    with tools.environment_append(env_build.vars):
+                        self.run("./configure")
+                        self.run("make")
+
+                replace_in_file("libpng16.pc", "${prefix}/include/libpng16", "${prefix}/include")
+                replace_in_file("libpng.pc", "${prefix}/include/libpng16", "${prefix}/include")
+                if not self.options.shared:
+                    replace_in_file("libpng16.pc", "-lpng16", "-lpng16 -lm -lz")
+                    replace_in_file("libpng.pc", "-lpng16", "-lpng16 -lm -lz")
         else:
             conan_magic_lines = '''project(libpng)
 cmake_minimum_required(VERSION 3.0)
@@ -68,14 +71,22 @@ CONAN_BASIC_SETUP()
             with tools.chdir(self.ZIP_FOLDER_NAME):
                 replace_in_file("CMakeLists.txt", "cmake_minimum_required(VERSION 2.8.3)", conan_magic_lines)
                 replace_in_file("CMakeLists.txt", "project(libpng C)", "")
+                if self.settings.os == "Android" and platform.system() == "Windows":
+                    replace_in_file("CMakeLists.txt", "find_program(AWK NAMES gawk awk)", "")
 
-                cmake = CMake(self.settings)
+
                 shared_options = "-DPNG_SHARED=ON -DPNG_STATIC=OFF" if self.options.shared else "-DPNG_SHARED=OFF -DPNG_STATIC=ON"
 
                 self.run("mkdir _build")
                 with tools.chdir("./_build"):
-                    self.run('cmake .. %s %s' % (cmake.command_line, shared_options))
-                    self.run("cmake --build . %s" % cmake.build_config)
+                    cmake = CMake(self)
+                    if hasattr(cmake, "configure"):  # New conan 0.21
+                        cmake.configure(source_dir="../", build_dir="./")
+                        cmake.build()
+                    else:
+                        cmake = CMake(self.settings)
+                        self.run('cmake .. %s %s' % (cmake.command_line, shared_options))
+                        self.run("cmake --build . %s" % cmake.build_config)
                 
     def package(self):
         """ Define your conan structure: headers, libs, bins and data. After building your
@@ -85,16 +96,27 @@ CONAN_BASIC_SETUP()
         self.copy("FindPNG.cmake", ".", ".")
 
         # Copy pc file
-        self.copy("*.pc", dst="", keep_path=False)
+        if self.settings.os != "Android": # Broken symlink
+            self.copy("*.pc", dst="", keep_path=False)
 
         # Copying headers
-        self.copy("*.h", "include", "%s" % (self.ZIP_FOLDER_NAME), keep_path=False)
+        self.copy("*.h", "include", "%s" % self.ZIP_FOLDER_NAME, keep_path=False)
 
         # Copying static and dynamic libs
         if self.settings.os == "Windows":
-            if self.options.shared:
-                self.copy(pattern="*.dll", dst="bin", src=self.ZIP_FOLDER_NAME, keep_path=False)
-            self.copy(pattern="*.lib", dst="lib", src=self.ZIP_FOLDER_NAME, keep_path=False)
+            if self.settings.compiler == "gcc":
+                if self.options.shared:
+                    self.copy(pattern="*.dll", dst="bin", src=self.ZIP_FOLDER_NAME, keep_path=False)
+                    self.copy(pattern="*libpng.dll.a", dst="bin", src=self.ZIP_FOLDER_NAME, keep_path=False)
+                    self.copy(pattern="*libpng16.dll.a", dst="bin", src=self.ZIP_FOLDER_NAME, keep_path=False)
+                else:
+                    self.copy(pattern="*libpng.a", dst="lib", src=self.ZIP_FOLDER_NAME, keep_path=False)
+                    self.copy(pattern="*libpng16.a", dst="lib", src=self.ZIP_FOLDER_NAME, keep_path=False)
+            else:
+                if self.options.shared:
+                    self.copy(pattern="*.dll", dst="bin", src=self.ZIP_FOLDER_NAME, keep_path=False)
+                self.copy(pattern="*.lib", dst="lib", src=self.ZIP_FOLDER_NAME, keep_path=False)
+                self.copy(pattern="*.a", dst="lib", src=self.ZIP_FOLDER_NAME, keep_path=False)
         else:
             if self.options.shared:
                 if self.settings.os == "Macos":
@@ -102,16 +124,22 @@ CONAN_BASIC_SETUP()
                 else:
                     self.copy(pattern="*.so*", dst="lib", src=self.ZIP_FOLDER_NAME, keep_path=False)
             else:
-                self.copy(pattern="*.a", dst="lib", src=self.ZIP_FOLDER_NAME, keep_path=False)
+                if self.settings.os == "Android":
+                    self.copy(pattern="*.a", dst="lib", src=os.path.join(self.ZIP_FOLDER_NAME), keep_path=False)
+                else:
+                    self.copy(pattern="*.a", dst="lib", src=self.ZIP_FOLDER_NAME, keep_path=False)
 
     def package_info(self):
         if self.settings.os == "Windows":
-            if self.options.shared:
-                self.cpp_info.libs = ['libpng16']
+            if self.settings.compiler == "gcc":
+                self.cpp_info.libs = ["png"]
             else:
-                self.cpp_info.libs = ['libpng16_static']
-            if self.settings.build_type == "Debug":
-                self.cpp_info.libs[0] += "d"
+                if self.options.shared:
+                    self.cpp_info.libs = ['libpng16']
+                else:
+                    self.cpp_info.libs = ['libpng16_static']
+                if self.settings.build_type == "Debug":
+                    self.cpp_info.libs[0] += "d"
         else:
             self.cpp_info.libs = ["png16"]
             if self.settings.os == "Linux":

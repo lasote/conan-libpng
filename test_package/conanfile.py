@@ -1,5 +1,5 @@
 from conans.model.conan_file import ConanFile
-from conans import CMake
+from conans import CMake, tools
 import os
 
 ############### CONFIGURE THESE VALUES ##################
@@ -19,12 +19,19 @@ class DefaultNameConan(ConanFile):
 
     def build(self):
         cmake = CMake(self.settings)
-        self.run('cmake %s %s' % (self.conanfile_directory, cmake.command_line))
-        self.run("cmake --build . %s" % cmake.build_config)
+
+        if hasattr(cmake, "configure"):  # New conan 0.21
+            cmake.configure(self, build_dir="./")
+            cmake.build(self)
+        else:
+            self.run('cmake %s %s' % (self.conanfile_directory, cmake.command_line))
+            self.run("cmake --build . %s" % cmake.build_config)
 
     def imports(self):
         self.copy(pattern="*.dll", dst="bin", src="bin")
         self.copy(pattern="*.dylib", dst="bin", src="lib")
         
     def test(self):
-        self.run("cd bin && .%smain" % os.sep)
+        # if not tools.cross_building(self.settings):
+        if not self.settings.os == "Android":
+            self.run("cd bin && .%smain" % os.sep)
