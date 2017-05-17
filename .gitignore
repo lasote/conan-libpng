@@ -1,4 +1,4 @@
-build
+test_package/build
 *.pyc
 .idea
 cmake-*
