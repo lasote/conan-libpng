@@ -105,6 +105,7 @@ CONAN_BASIC_SETUP()
             if self.options.shared:
                 self.copy(pattern="*.dll", dst="bin", src=self.ZIP_FOLDER_NAME, keep_path=False)
             self.copy(pattern="*.lib", dst="lib", src=self.ZIP_FOLDER_NAME, keep_path=False)
+            self.copy(pattern="*.a", dst="lib", src=self.ZIP_FOLDER_NAME, keep_path=False)
         else:
             if self.options.shared:
                 if self.settings.os == "Macos":
@@ -119,12 +120,15 @@ CONAN_BASIC_SETUP()
 
     def package_info(self):
         if self.settings.os == "Windows":
-            if self.options.shared:
-                self.cpp_info.libs = ['libpng16']
+            if self.settings.compiler == "gcc":
+                self.cpp_info.libs = ["png"]
             else:
-                self.cpp_info.libs = ['libpng16_static']
-            if self.settings.build_type == "Debug":
-                self.cpp_info.libs[0] += "d"
+                if self.options.shared:
+                    self.cpp_info.libs = ['libpng16']
+                else:
+                    self.cpp_info.libs = ['libpng16_static']
+                if self.settings.build_type == "Debug":
+                    self.cpp_info.libs[0] += "d"
         else:
             self.cpp_info.libs = ["png16"]
             if self.settings.os == "Linux":
