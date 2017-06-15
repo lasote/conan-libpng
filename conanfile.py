@@ -93,8 +93,11 @@ class LibpngConan(ConanFile):
             self.copy("*.pc", dst="", keep_path=False)
 
         # Copying headers
-        self.copy("*png*.h", "include", self.ZIP_FOLDER_NAME, keep_path=True)
-        self.copy("*.h", "include", os.path.join(self.ZIP_FOLDER_NAME, "contrib"), keep_path=True)
+        if self.settings.os != "Windows":  # https://github.com/lasote/conan-libpng/issues/8
+            self.copy("*png*.h", "include", self.ZIP_FOLDER_NAME, keep_path=True)
+            self.copy("*.h", "include", os.path.join(self.ZIP_FOLDER_NAME, "contrib"), keep_path=True)
+        else:
+            self.copy("*.h", "include", self.ZIP_FOLDER_NAME, keep_path=False)
 
         # Copying static and dynamic libs
         if self.settings.os == "Windows":
