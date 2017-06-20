@@ -88,8 +88,11 @@ class LibpngConan(ConanFile):
         # Copy findPNG.cmake to package
         self.copy("FindPNG.cmake", ".", ".")
 
+        # Copy the license files
+        self.copy("*license*", dst="licenses", ignore_case=True, keep_path=False)
+
         # Copy pc file
-        if self.settings.os != "Android": # Broken symlink
+        if self.settings.os != "Android":  # Broken symlink
             self.copy("*.pc", dst="", keep_path=False)
 
         # Copying headers

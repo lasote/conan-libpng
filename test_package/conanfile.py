@@ -32,3 +32,4 @@ class DefaultNameConan(ConanFile):
         # if not tools.cross_building(self.settings):
         if not self.settings.os == "Android":
             self.run("cd bin && .%smain" % os.sep)
+        assert os.listdir(os.path.join(self.deps_cpp_info["libpng"].rootpath, "licenses"))
