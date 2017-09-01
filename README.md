@@ -2,9 +2,9 @@
 
 # conan-libpng
 
-[Conan.io](https://conan.io) package for lib libpng library: http://www.libpng.org/pub/png/libpng.html
+Conan package for lib libpng library: http://www.libpng.org/pub/png/libpng.html
 
-The packages generated with this **conanfile** can be found in [conan.io](https://conan.io/source/libpng/1.6.32/lasote/stable).
+The packages generated with this **conanfile** can be found in [conan.io](https://bintray.com/conan-community/conan/libpng%3Aconan).
 
 ## Build packages
 
