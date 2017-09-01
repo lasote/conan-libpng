@@ -51,20 +51,22 @@ class LibpngConan(ConanFile):
 
     def _build_cmake(self):
         conan_magic_lines = '''project(libpng)
-        cmake_minimum_required(VERSION 3.0)
+        cmake_minimum_required(VERSION 3.0.2)
         include(../conanbuildinfo.cmake)
         CONAN_BASIC_SETUP()
             '''
         with tools.chdir(self.ZIP_FOLDER_NAME):
-            tools.replace_in_file("CMakeLists.txt", "cmake_minimum_required(VERSION 2.8.3)", conan_magic_lines)
+            tools.replace_in_file("CMakeLists.txt", "cmake_minimum_required(VERSION 3.0.2)", conan_magic_lines)
             tools.replace_in_file("CMakeLists.txt", "project(libpng C)", "")
             if self.settings.os == "Android" and platform.system() == "Windows":
                 tools.replace_in_file("CMakeLists.txt", "find_program(AWK NAMES gawk awk)", "")
             self.run("mkdir _build")
             with tools.chdir("./_build"):
                 cmake = CMake(self)
+                cmake.definitions["PNG_TESTS"] = "OFF"
                 cmake.definitions["PNG_SHARED"] = "ON" if self.options.shared else "OFF"
                 cmake.definitions["PNG_STATIC"] = "OFF" if self.options.shared else "ON"
+                cmake.definitions["PNG_DEBUG"] = "OFF" if self.settings.build_type == "Release" else "ON"
                 cmake.configure(source_dir="../", build_dir="./")
                 cmake.build()
 
