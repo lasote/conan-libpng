@@ -4,7 +4,7 @@
 
 [Conan.io](https://conan.io) package for lib libpng library: http://www.libpng.org/pub/png/libpng.html
 
-The packages generated with this **conanfile** can be found in [conan.io](https://conan.io/source/libpng/1.6.21/lasote/stable).
+The packages generated with this **conanfile** can be found in [conan.io](https://conan.io/source/libpng/1.6.32/lasote/stable).
 
 ## Build packages
 
@@ -14,20 +14,20 @@ Download conan client from [Conan.io](https://conan.io) and run:
 
 ## Upload packages to server
 
-    $ conan upload libpng/1.6.21@lasote/stable --all
+    $ conan upload libpng/1.6.32@lasote/stable --all
     
 ## Reuse the packages
 
 ### Basic setup
 
-    $ conan install libpng/1.6.21@lasote/stable
+    $ conan install libpng/1.6.32@lasote/stable
     
 ### Project setup
 
 If you handle multiple dependencies in your project is better to add a *conanfile.txt*
     
     [requires]
-    libpng/1.6.21@lasote/stable
+    libpng/1.6.32@lasote/stable
 
     [options]
     libpng:shared=true # false
