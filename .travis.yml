@@ -1,7 +1,7 @@
 
 env:
    global:
-     - CONAN_REFERENCE: "libpng/1.6.23"
+     - CONAN_REFERENCE: "libpng/1.6.32"
      - CONAN_USERNAME: "conan"
      - CONAN_LOGIN_USERNAME: "lasote"
      - CONAN_CHANNEL: "testing"

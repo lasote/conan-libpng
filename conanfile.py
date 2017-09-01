@@ -7,7 +7,7 @@ from conans import ConanFile, tools
 
 class LibpngConan(ConanFile):
     name = "libpng"
-    version = "1.6.23"
+    version = "1.6.32"
     ZIP_FOLDER_NAME = "%s-%s" % (name, version)
     generators = "cmake"
     settings = "os", "arch", "compiler", "build_type"
@@ -20,7 +20,7 @@ class LibpngConan(ConanFile):
     "" and has been extensively tested for over 20 years."
 
     def requirements(self):
-        self.requires.add("zlib/1.2.11@%s/stable" % self.user)
+        self.requires.add("zlib/1.2.11@conan/stable")
 
     def config_options(self):
         if self.settings.os == "Windows":
