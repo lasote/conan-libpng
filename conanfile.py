@@ -63,8 +63,10 @@ class LibpngConan(ConanFile):
             self.run("mkdir _build")
             with tools.chdir("./_build"):
                 cmake = CMake(self)
+                cmake.definitions["PNG_TESTS"] = "OFF"
                 cmake.definitions["PNG_SHARED"] = "ON" if self.options.shared else "OFF"
                 cmake.definitions["PNG_STATIC"] = "OFF" if self.options.shared else "ON"
+                cmake.definitions["PNG_DEBUG"] = "OFF" if self.settings.build_type == "Release" else "ON"
                 cmake.configure(source_dir="../", build_dir="./")
                 cmake.build()
 
